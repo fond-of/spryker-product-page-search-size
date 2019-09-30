@@ -4,16 +4,18 @@ namespace FondOfSpryker\Client\ProductPageSearchSize\Plugin\Elasticsearch\QueryE
 
 use Elastica\Query;
 use Elastica\Query\BoolQuery;
+use FondOfSpryker\Shared\ProductPageSearchSize\ProductPageSearchSizeConstants;
 use Generated\Shared\Search\PageIndexMap;
 use InvalidArgumentException;
 use Spryker\Client\Kernel\AbstractPlugin;
 use Spryker\Client\Search\Dependency\Plugin\QueryExpanderPluginInterface;
 use Spryker\Client\Search\Dependency\Plugin\QueryInterface;
+use Spryker\Client\Search\Plugin\Config\SortConfigBuilder;
 
 /**
  * @method \FondOfSpryker\Client\ProductPageSearchSize\ProductPageSearchSizeFactory getFactory()
  */
-class SizeKeyQueryExpanderPlugin extends AbstractPlugin implements QueryExpanderPluginInterface
+class SizeOrderQueryExpanderPlugin extends AbstractPlugin implements QueryExpanderPluginInterface
 {
     /**
      * @param \Spryker\Client\Search\Dependency\Plugin\QueryInterface $searchQuery
@@ -23,20 +25,26 @@ class SizeKeyQueryExpanderPlugin extends AbstractPlugin implements QueryExpander
      */
     public function expandQuery(QueryInterface $searchQuery, array $requestParameters = []): QueryInterface
     {
-        if (!array_key_exists(PageIndexMap::STYLE_KEY, $requestParameters)) {
-            return $searchQuery;
+        if (array_key_exists(ProductPageSearchSizeConstants::SORT_BY_SIZE, $requestParameters) && $requestParameters[ProductPageSearchSizeConstants::SORT_BY_SIZE] === true) {
+            $this->addSort($searchQuery->getSearchQuery());
         }
 
-        $boolQuery = $this->getBoolQuery($searchQuery->getSearchQuery());
-
-        $matchQuery = $this->getFactory()
-            ->createQueryBuilder()
-            ->createMatchQuery()
-            ->setField(PageIndexMap::STYLE_KEY, $requestParameters[PageIndexMap::STYLE_KEY]);
-
-        $boolQuery->addMust($matchQuery);
-
         return $searchQuery;
+    }
+
+    /**
+     * @param \Elastica\Query $searchQuery
+     *
+     * @return void
+     */
+    protected function addSort(Query $searchQuery): void
+    {
+        $searchQuery->addSort([
+            PageIndexMap::INTEGER_SORT . '.' . PageIndexMap::SIZE => [
+                'order' => SortConfigBuilder::DIRECTION_ASC,
+                'mode' => 'min',
+            ],
+        ]);
     }
 
     /**
