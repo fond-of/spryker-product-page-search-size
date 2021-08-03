@@ -24,7 +24,7 @@ class SizeDataExpanderPlugin extends AbstractPlugin implements ProductPageDataEx
             return;
         }
 
-        $productAttributesData = \json_decode($productData[ProductPageSearchSizeConstants::ATTRIBUTES], true);
+        $productAttributesData = json_decode($productData[ProductPageSearchSizeConstants::ATTRIBUTES], true);
 
         if (!array_key_exists(PageIndexMap::SIZE, $productAttributesData)) {
             return;
